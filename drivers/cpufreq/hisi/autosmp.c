@@ -12,8 +12,8 @@
  * optimize more, generalize for n cores, Sep. 2013, http://goo.gl/448qBz
  * generalize for all arch, rename as autosmp, Dec. 2013, http://goo.gl/x5oyhy
  * 
- * Copyright (c) 2012-2013, Dennis Rassmann <showp1984@gmail.com>
- * Added simple big.LITTLE functionality
+ * Copyright (c) 2020, Benjamin Ausensi Tapia <aun_0@protonmail.ch>
+ * Adapted for HiSilicon Kirin 950/955 HMP clusters
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 
 #define DEBUG 0
 
-#define ASMP_TAG "AutoSMP: "
+#define ASMP_TAG "AutoSMP_kirin: "
 #define ASMP_STARTDELAY 20000
 
 struct asmp_cpudata_t {
@@ -46,7 +46,8 @@ static DEFINE_PER_CPU(struct asmp_cpudata_t, asmp_cpudata);
 static struct asmp_param_struct {
 	unsigned int delay;
 	bool scroff_single_core;
-	unsigned int max_cpus;
+	
+    unsigned int max_cpus;
 	unsigned int min_cpus;
 	unsigned int cpufreq_up;
 	unsigned int cpufreq_down;
@@ -63,8 +64,14 @@ static struct asmp_param_struct {
 	.cycle_down = 1,
 };
 
-static unsigned int cycle = 0;
+static unsigned int cycle_b = 0;
 static int enabled = 1;
+
+static int cputype[CONFIG_NR_CPUS];
+static int first_L;
+static int first_b;
+static int num_L = 0;
+static int num_b = 0;
 
 static void   asmp_work_fn(struct work_struct *work) {
 	unsigned int cpu = 0, slow_cpu = 0;
@@ -239,10 +246,42 @@ static struct attribute_group asmp_stats_attr_group = {
 
 static int __init asmp_init(void) {
 	int cpu, rc;
-
-	for_each_possible_cpu(cpu)
+    
+	for_each_possible_cpu(cpu) {
 		per_cpu(asmp_cpudata, cpu).times_hotplugged = 0;
-
+        cputype[cpu] = topology_physical_package_id(cpu);
+    }
+    
+    pr_info(ASMP_TAG"HMP cluster topology:\n"ASMP_TAG"big: ");
+    for_each_possible_cpu(cpu) {
+        if(cputype[cpu] == 1) {
+            pr_info(ASMP_TAG"%d ", cpu);
+            num_b++;
+        }
+    }
+    pr_info(ASMP_TAG"\nLITTLE: ");
+    for_each_possible_cpu(cpu) {
+        if(cputype[cpu] == 0) {
+            pr_info(ASMP_TAG"%d ", cpu);
+            num_L++;
+        }
+    }
+    pr_info("\n");
+    
+    /* Scan for the first big and LITTLE cores */
+    for_each_possible_cpu(cpu) {
+        if(cputype[cpu] == 1) {
+            first_b = cpu;
+            break;
+        }
+    }
+    for_each_possible_cpu(cpu) {
+        if(cputype[cpu] == 0) {
+            first_L = cpu;
+            break;
+        }
+    }
+    
 	asmp_workq = alloc_workqueue("asmp", WQ_HIGHPRI, 0);
 	if (!asmp_workq)
 		return -ENOMEM;
