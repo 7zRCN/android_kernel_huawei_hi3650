@@ -24,6 +24,14 @@ config HISI_BIG_MAXFREQ_HOTPLUG
 	help
 	  This add Hotplug Flow in CPUfreq for Hisilicon Big-little Platform with boost freq.
 
+config AUTOSMP
+	bool "Multi-core automatic hotplug support"
+	depends on SMP && HOTPLUG_CPU
+	default n
+	help
+	  Automatically hotplugs the multiple cpu cores on and off
+	  based on cpu load and suspend state.
+    
 config HISI_CPUFREQ_DT
 	bool "Hisilicon cpufreq-dt enable"
 	depends on CPUFREQ_DT
