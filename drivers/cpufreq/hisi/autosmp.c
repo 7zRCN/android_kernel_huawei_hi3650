@@ -64,7 +64,7 @@ static struct asmp_param_struct {
 	.cycle_down = 1,
 };
 
-static unsigned int cycle_b = 0;
+static unsigned int cycle = 0;
 static int enabled = 1;
 
 static int cputype[CONFIG_NR_CPUS];
