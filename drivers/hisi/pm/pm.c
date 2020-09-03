@@ -27,8 +27,9 @@
 #include <linux/mfd/hisi_pmic.h>
 #include "hisi_lpregs.h"
 
+#ifdef CONFIG_HUAWEI_DUBAI
 #include <huawei_platform/power/dubai/dubai.h>
-
+#endif
 
 #include <soc_gpio_interface.h>
 #include <soc_gic_ns_interface.h>
@@ -145,7 +146,9 @@ void pm_gic_pending_dump(void)
 					printk("(gpio-%d)", gpio);
                 }
 				/* notify dubai module to update wakeup information */
+				#ifdef CONFIG_HUAWEI_DUBAI
 				dubai_update_wakeup_info(g_ap_irq_name[irq], gpio);
+				#endif
 				printk("\n");
 			}
 		}
