@@ -26,6 +26,10 @@
 #define LATENCY_MULTIPLIER			(1000)
 #define SUGOV_KTHREAD_PRIORITY	50
 
+#define SUGOV_DEF_UPRATE               200
+#define SUGOV_DEF_DOWNRATE_L          2500
+#define SUGOV_DEF_DOWNRATE_B          4500
+
 struct sugov_tunables {
 	struct gov_attr_set attr_set;
 	unsigned int up_rate_limit_us;
@@ -556,7 +560,6 @@ static int sugov_init(struct cpufreq_policy *policy)
 {
 	struct sugov_policy *sg_policy;
 	struct sugov_tunables *tunables;
-	unsigned int lat;
 	int ret = 0;
 
 	/* State should be equivalent to EXIT */
@@ -590,15 +593,11 @@ static int sugov_init(struct cpufreq_policy *policy)
 		ret = -ENOMEM;
 		goto stop_kthread;
 	}
-
-	tunables->up_rate_limit_us = LATENCY_MULTIPLIER;
-	tunables->down_rate_limit_us = LATENCY_MULTIPLIER;
-	lat = policy->cpuinfo.transition_latency / NSEC_PER_USEC;
-	if (lat) {
-		tunables->up_rate_limit_us *= lat;
-		tunables->down_rate_limit_us *= lat;
-	}
-
+    
+    /* Manual defaults for Kirin 950/955: the regular method doesn't work like it should */
+    tunables->up_rate_limit_us = SUGOV_DEF_UPRATE;
+	tunables->down_rate_limit_us = topology_physical_package_id(cpu) ? SUGOV_DEF_DOWNRATE_B : SUGOV_DEF_DOWNRATE_L;
+    
 	policy->governor_data = sg_policy;
 	sg_policy->tunables = tunables;
 
