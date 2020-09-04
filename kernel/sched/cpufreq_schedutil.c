@@ -596,7 +596,7 @@ static int sugov_init(struct cpufreq_policy *policy)
     
     /* Manual defaults for Kirin 950/955: the regular method doesn't work like it should */
     tunables->up_rate_limit_us = SUGOV_DEF_UPRATE;
-	tunables->down_rate_limit_us = topology_physical_package_id(cpu) ? SUGOV_DEF_DOWNRATE_B : SUGOV_DEF_DOWNRATE_L;
+    tunables->down_rate_limit_us = topology_physical_package_id(policy->cpu) ? SUGOV_DEF_DOWNRATE_B : SUGOV_DEF_DOWNRATE_L;
     
 	policy->governor_data = sg_policy;
 	sg_policy->tunables = tunables;
