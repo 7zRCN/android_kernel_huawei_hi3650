@@ -422,11 +422,7 @@ static __always_inline u64 __ktime_get_fast_ns(struct tk_fast *tkf)
 
 		now += timekeeping_delta_to_ns(tkr,
 				clocksource_delta(
-<<<<<<< HEAD
-					tk_clock_read(tkr),
-=======
 					tkr->read(tkr->clock),
->>>>>>> v4.4.25
 					tkr->cycle_last,
 					tkr->mask));
 	} while (read_seqcount_retry(&tkf->seq, seq));

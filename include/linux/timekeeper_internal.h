@@ -28,6 +28,7 @@
  * for a fast NMI safe accessors.
  */
 struct tk_read_base {
+	cycle_t (*read)(struct clocksource *cs);
 	struct clocksource	*clock;
 	cycle_t			mask;
 	cycle_t			cycle_last;
