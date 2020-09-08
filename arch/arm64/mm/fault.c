@@ -30,6 +30,7 @@
 #include <linux/highmem.h>
 #include <linux/perf_event.h>
 #include <linux/preempt.h>
+#include <linux/boost_sigkill_free.h>
 
 #include <asm/bug.h>
 #include <asm/cpufeature.h>

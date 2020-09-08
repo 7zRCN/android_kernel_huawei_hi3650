@@ -89,6 +89,10 @@ EXPORT_SYMBOL(max_mapnr);
 EXPORT_SYMBOL(mem_map);
 #endif
 
+#ifdef CONFIG_HW_BOOST_SIGKILL_FREE
+#include <linux/boost_sigkill_free.h>
+#endif
+
 /*
  * A number of key systems in x86 including ioremap() rely on the assumption
  * that high_memory defines the upper bound on direct map memory, then end

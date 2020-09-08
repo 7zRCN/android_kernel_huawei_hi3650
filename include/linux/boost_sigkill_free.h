@@ -23,6 +23,11 @@ extern unsigned int sysctl_boost_sigkill_free;
 #define sysctl_boost_sigkill_free 0
 #endif
 
+static inline bool vma_is_anonymous(struct vm_area_struct *vma)
+{
+	return !vma->vm_ops;
+}
+
 #ifdef CONFIG_HW_BOOST_SIGKILL_FREE
 extern void fast_free_user_mem(void);
 #else

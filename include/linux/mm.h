@@ -1331,12 +1331,12 @@ static inline int vma_growsdown(struct vm_area_struct *vma, unsigned long addr)
 {
 	return vma && (vma->vm_end == addr) && (vma->vm_flags & VM_GROWSDOWN);
 }
-
+#ifndef CONFIG_HW_BOOST_SIGKILL_FREE
 static inline bool vma_is_anonymous(struct vm_area_struct *vma)
 {
 	return !vma->vm_ops;
 }
-
+#endif
 static inline int stack_guard_page_start(struct vm_area_struct *vma,
 					     unsigned long addr)
 {
