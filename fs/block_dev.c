@@ -1848,6 +1848,7 @@ void iterate_bdevs(void (*func)(struct block_device *, void *), void *arg)
 		 */
 		iput(old_inode);
 		old_inode = inode;
+
 		bdev = I_BDEV(inode);
 
 		mutex_lock(&bdev->bd_mutex);
