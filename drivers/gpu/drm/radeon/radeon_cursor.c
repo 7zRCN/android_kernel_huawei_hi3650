@@ -201,6 +201,14 @@ static int radeon_cursor_move_locked(struct drm_crtc *crtc, int x, int y)
 		}
 	}
 
+	if (x <= (crtc->x - w) || y <= (crtc->y - radeon_crtc->cursor_height) ||
+	    x >= (crtc->x + crtc->mode.hdisplay) ||
+	    y >= (crtc->y + crtc->mode.vdisplay))
+		goto out_of_bounds;
+
+	x += xorigin;
+	y += yorigin;
+
 	if (ASIC_IS_DCE4(rdev)) {
 		WREG32(EVERGREEN_CUR_POSITION + radeon_crtc->crtc_offset, (x << 16) | y);
 		WREG32(EVERGREEN_CUR_HOT_SPOT + radeon_crtc->crtc_offset, (xorigin << 16) | yorigin);
