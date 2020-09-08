@@ -1589,7 +1589,11 @@ int xhci_urb_dequeue(struct usb_hcd *hcd, struct urb *urb, int status)
 			if (!list_empty(&td->cancelled_td_list))
 				list_del_init(&td->cancelled_td_list);
 		}
-		goto err_giveback;
+		usb_hcd_unlink_urb_from_ep(hcd, urb);
+		spin_unlock_irqrestore(&xhci->lock, flags);
+		usb_hcd_giveback_urb(hcd, urb, -ESHUTDOWN);
+		xhci_urb_free_priv(urb_priv);
+		return ret;
 	}
 
 	i = urb_priv->td_cnt;
