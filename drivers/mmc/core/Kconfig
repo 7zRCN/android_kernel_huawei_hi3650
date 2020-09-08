@@ -37,8 +37,18 @@ config MMC_PASSWORDS
 	  For example, if you have an MMC card that was locked using
 	  Symbian OS on your cell phone, you won't be able to read it
 	  on Linux without this support.
-config MMC_SPI_CRC
-    boolean "Use SPI CRC for MMC"
-    default y
-    help
-      Use SPI CRC for MMC.
+config MMC_SPI_CRC_DEFAULT
+	boolean "Enable CRC checksum for SPI by default"
+	default y
+	help
+	  Enable CRC checksums in SPI operations by default.
+config MMC_SPI_CRC_SYSFS
+	boolean "Enable sysfs interface for SPI CRC toggle"
+	default y
+	help
+	  Export a sysfs interface to switch SPI CRC checksums on/off
+	  from userspace. This will let users customize the behavior
+	  of the MMC driver from userspace with a script or a kernel
+	  manager.
+	  The interface is /sys/kernel/mmc_spi_crc_enable
+	  0 to disable, non-zero to enable.

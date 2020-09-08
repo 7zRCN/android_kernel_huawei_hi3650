@@ -5,6 +5,7 @@
  *  SD support Copyright (C) 2004 Ian Molton, All Rights Reserved.
  *  Copyright (C) 2005-2008 Pierre Ossman, All Rights Reserved.
  *  MMCv4 support Copyright (C) 2006 Philip Langdale, All Rights Reserved.
+ *  Copyright (C) 2020 Benjamin Ausensi Tapia
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -60,6 +61,18 @@
 #include "../card/queue.h"
 #endif
 
+#ifdef CONFIG_MMC_SPI_CRC_SYSFS
+#include <linux/kobject.h>
+#include <linux/sysfs.h>
+
+ssize_t spicrc_show(struct kobject *o, struct kobj_attribute *a, char *buf);
+ssize_t spicrc_store(struct kobject *o, struct kobj_attribute *a,
+		   const char *buf, size_t count);
+
+static struct kobject *kobj_spicrc;
+#endif
+
+
 /* If the device is not responding */
 #define MMC_CORE_TIMEOUT_MS	(10 * 60 * 1000) /* 10 minute timeout */
 
@@ -81,10 +94,17 @@ static const unsigned freqs[] = { 400000, 300000, 200000, 100000 };
  * performance cost, and for other reasons may not always be desired.
  * So we allow it it to be disabled.
  */
-#ifdef CONFIG_MMC_SPI_CRC
+#ifdef CONFIG_MMC_SPI_CRC_DEFAULT
 bool use_spi_crc = 1;
 #else
 bool use_spi_crc = 0;
+#endif
+
+#ifdef CONFIG_MMC_SPI_CRC_SYSFS
+static struct kobj_attribute kobj_attr_spicrc = __ATTR(use_spi_crc 
+						      ,0660
+						      ,spicrc_show
+						      ,spicrc_store);
 #endif
 
 module_param(use_spi_crc, bool, 0);
@@ -3155,6 +3175,23 @@ void mmc_init_context_info(struct mmc_host *host)
 	init_waitqueue_head(&host->context_info.wait);
 }
 
+/* sysfs begin */
+#ifdef CONFIG_MMC_SPI_CRC_SYSFS
+ssize_t spicrc_show(struct kobject *o, struct kobj_attribute *a, char *buf) {
+	pr_info("mmc_core: use_spi_crc read\n");
+	return sprintf(buf, "%d", use_spi_crc);
+}
+
+ssize_t spicrc_store(struct kobject *o, struct kobj_attribute *a,
+		   const char *buf, size_t count) {
+	pr_info("mmc_core: use_spi_crc written (%s)\n", buf);
+	u8 c = (u8)buf[0];
+	use_spi_crc = (c == '0') ? 0 : 1;
+	return count;
+}
+#endif
+/* sysfs end */
+
 #ifdef CONFIG_MMC_EMBEDDED_SDIO
 void mmc_set_embedded_sdio_data(struct mmc_host *host,
 				struct sdio_cis *cis,
@@ -3203,6 +3240,15 @@ static int __init mmc_init(void)
 	ret = sdio_register_bus();
 	if (ret)
 		goto unregister_host_class;
+#ifdef CONFIG_MMC_SPI_CRC_SYSFS
+	kobj_spicrc = kobject_create_and_add("mmc", kernel_kobj);
+	if(!kobj_spicrc)
+		return -ENOMEM;
+	
+	if(sysfs_create_file(kobj_spicrc, &kobj_attr_spicrc.attr))
+		goto sysfs_free;
+#endif
+
     dentry_mmclog = debugfs_create_dir("hw_mmclog", NULL);
     if(dentry_mmclog )
     {
@@ -3215,8 +3261,13 @@ static int __init mmc_init(void)
         debugfs_create_file("debug_mask", S_IFREG|S_IRWXU|S_IRGRP|S_IROTH,
             dentry_mmclog, NULL, &debug_mask_fops);
     }
-	return 0;
 
+	return 0;
+#ifdef CONFIG_MMC_SPI_CRC_SYSFS
+sysfs_free:
+	kobject_put(kobj_spicrc);
+	sysfs_remove_file(kernel_kobj, &kobj_attr_spicrc.attr);
+#endif
 unregister_host_class:
 	mmc_unregister_host_class();
 unregister_bus:
@@ -3225,12 +3276,15 @@ destroy_workqueue:
 	destroy_workqueue(workqueue_mmc0);
 	destroy_workqueue(workqueue_mmc1);
 	destroy_workqueue(workqueue_mmc2);
-
 	return ret;
 }
 
 static void __exit mmc_exit(void)
 {
+#ifdef CONFIG_MMC_SPI_CRC_SYSFS
+	kobject_put(kobj_spicrc);
+	sysfs_remove_file(kernel_kobj, &kobj_attr_spicrc.attr);
+#endif
 	sdio_unregister_bus();
 	mmc_unregister_host_class();
 	mmc_unregister_bus();
