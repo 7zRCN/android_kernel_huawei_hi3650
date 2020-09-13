@@ -1,0 +1,2 @@
+PATH=$PATH:$HOME/ubertc/bin
+CROSS_COMPILE=aarch64-linux-android-
