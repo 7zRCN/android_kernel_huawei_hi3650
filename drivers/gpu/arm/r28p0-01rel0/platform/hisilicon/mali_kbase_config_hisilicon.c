@@ -376,14 +376,15 @@ static int mali_kbase_devfreq_target(struct device *dev, unsigned long *_freq,
 #ifdef CONFIG_HISI_IPA_THERMAL
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 9, 0))
 	gpu_id = ipa_get_actor_id("gpu");
+#else
+	/* Wattsensi: Compatibility with legacy HiSilicon codebase */
+	gpu_id = IPA_GPU;
+#endif
 	if (gpu_id < 0) {
 		pr_err("[mali]  Failed to get ipa actor id for gpu.\n");
 		return -ENODEV;
 	}
 	freq = ipa_freq_limit(gpu_id, freq);
-#else
-	freq = ipa_freq_limit(IPA_GPU, freq);
-#endif
 #endif
 
 	if (old_freq == freq)
