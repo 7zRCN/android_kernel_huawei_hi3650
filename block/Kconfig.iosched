@@ -16,6 +16,11 @@ config IOSCHED_MAPLE
 	depends on FB
         default y
 
+config IOSCHED_SIO
+	tristate "Simple I/O scheduler"
+	depends on FB
+        default y
+
 config IOSCHED_DEADLINE
 	tristate "Deadline I/O scheduler"
 	default y
