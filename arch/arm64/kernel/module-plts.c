@@ -237,9 +237,13 @@ int module_frob_arch_sections(Elf_Ehdr *ehdr, Elf_Shdr *sechdrs,
 
 u64 livepatch_emit_plt_entry(struct module *mod, unsigned long val)
 {
+	BUILD_BUG_ON(sizeof(void*) != 8);
+
 	struct plt_entry *plt = plts_addr;
 	int num = mod->arch.core.plt_num_entries;
-	u32 *addr = &plt[num];
+	
+	void *addr = &plt[num];
+
 	u32 insns[4];
 	int i;
 
