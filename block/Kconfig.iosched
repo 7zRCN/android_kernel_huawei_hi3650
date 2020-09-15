@@ -16,6 +16,26 @@ config IOSCHED_MAPLE
 	depends on FB
         default y
 
+config IOSCHED_ZEN
+	tristate "Zen I/O scheduler"
+	depends on FB
+        default y
+
+config IOSCHED_FIOPS
+	tristate "FIOPS I/O scheduler"
+	depends on FB
+        default y
+
+config IOSCHED_ANXIETY
+	tristate "Anxiety I/O scheduler"
+	depends on FB
+        default y
+
+config IOSCHED_TRIPNDROID
+	tristate "Tripndroid I/O scheduler"
+	depends on FB
+        default y
+
 config IOSCHED_SIO
 	tristate "Simple I/O scheduler"
 	depends on FB
