@@ -225,16 +225,26 @@ static int smmu_err_addr_free(void);
 
 noinline int atfd_hisi_service_isp_smc(u64 funcid, u64 arg0, u64 arg1, u64 arg2)
 {
-       asm volatile (
-            __asmeq("%0", "x0")
-            __asmeq("%1", "x1")
-            __asmeq("%2", "x2")
-            __asmeq("%3", "x3")
-            "smc    #0\n"
-        : "+r" (funcid)
-        : "r" (arg0), "r" (arg1), "r" (arg2));
+	/* Wattsensi: Fix potentially fatal condition in secure world call */
+	register u64 x0 asm("x0") = funcid;
+	register u64 x1 asm("x1") = arg0;
+	register u64 x2 asm("x2") = arg1;
+	register u64 x3 asm("x3") = arg2;
 
-    return (int)funcid;
+	asm volatile (
+       		__asmeq("%0", "x0")
+       		__asmeq("%1", "x1")
+       		__asmeq("%2", "x2")
+       		__asmeq("%3", "x3")
+            	"smc #0         \n"
+
+              : "+r" (x0)
+	      : "r"  (x1), "r" (x2), "r" (x3)
+	      :
+	);
+
+	return (int)x0;
+	/* asm("code") : out : in : clobbers */
 }
 
 static void isp_iova_pool_destroy(struct gen_pool *pool)
