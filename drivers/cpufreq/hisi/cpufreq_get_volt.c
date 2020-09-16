@@ -53,16 +53,25 @@ extern u32 rdr_lpm3_buf_len;
 /*lint -e715 -e838*/
 noinline int atfd_hisi_service_get_val_smc(u64 function_id, u64 arg0, u64 arg1, u64 arg2)
 {
+	BUG_ON_BUILD(sizeof(int) != 8);
+
+	/* Huawei, do stuff the proper way already */
+	register u64 x0 asm("x0") = function_id;
+	register u64 x1 asm("x1") = arg0;
+	register u64 x2 asm("x2") = arg1;
+	register u64 x3 asm("x3") = arg2;
+
 	asm volatile (
 		__asmeq("%0", "x0")
 		__asmeq("%1", "x1")
 		__asmeq("%2", "x2")
 		__asmeq("%3", "x3")
 		"smc	#0\n"
-		: "+r" (function_id)
-		: "r" (arg0), "r" (arg1), "r" (arg2));
+	      : "+r" (x0)
+	      : "r" (x1), "r" (x2), "r" (x3)
+	      : );
 
-	return (int)function_id;
+	return (int)x0;
 }
 
 static int get_volt_show(struct seq_file *m, void *v)
