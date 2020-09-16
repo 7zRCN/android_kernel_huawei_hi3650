@@ -29,6 +29,7 @@
 #include <linux/cpu.h>
 #include <linux/cpumask.h>
 #include <linux/hrtimer.h>
+#include <linux/device.h>
 
 #define DEBUG 0
 
@@ -73,6 +74,27 @@ static int first_b;
 static int num_L = 0;
 static int num_b = 0;
 
+static void   asmp_engage_low(unsigned int cpu) {
+	struct device *cpu_dev = get_cpu_device(cpu);
+	device_lock(cpu_dev);
+
+	if(cpu_online(cpu))
+		cpu_down(cpu);
+	cpu_dev->offline = 1;
+
+	device_unlock(cpu_dev);
+}
+static void   asmp_engage_high(unsigned int cpu) {
+	struct device *cpu_dev = get_cpu_device(cpu);
+	device_lock(cpu_dev);
+
+	if(!cpu_online(cpu))
+		cpu_up(cpu);
+	cpu_dev->offline = 0;
+
+	device_unlock(cpu_dev);
+}
+
 static void   asmp_work_fn(struct work_struct *work) {
 	unsigned int cpu = 0, slow_cpu = 0;
 	unsigned int rate, cpu0_rate, slow_rate = UINT_MAX, fast_rate;
@@ -102,7 +124,7 @@ static void   asmp_work_fn(struct work_struct *work) {
 		if ((nr_cpu_online < asmp_param.max_cpus) && 
 		    (cycle >= asmp_param.cycle_up)) {
 			cpu = cpumask_next_zero(0, cpu_online_mask);
-			cpu_up(cpu);
+			asmp_engage_high(cpu);
 			cycle = 0;
 #if DEBUG
 			pr_info(ASMP_TAG"CPU[%d] on\n", cpu);
@@ -112,7 +134,7 @@ static void   asmp_work_fn(struct work_struct *work) {
 	} else if (slow_cpu && (fast_rate < asmp_param.cpufreq_down)) {
 		if ((nr_cpu_online > asmp_param.min_cpus) &&
 		    (cycle >= asmp_param.cycle_down)) { // but not so soon 
-			cpu_down(slow_cpu);
+			asmp_engage_low(slow_cpu);
 			cycle = 0;
 #if DEBUG
 			pr_info(ASMP_TAG"CPU[%d] off\n", slow_cpu);
@@ -140,7 +162,7 @@ static int   set_enabled(const char *val, const struct kernel_param *kp) {
 		cancel_delayed_work_sync(&asmp_work);
 		for (cpu = 1; cpu < nr_cpu_ids; cpu++)
 			if (!cpu_online(cpu)) 
-				cpu_up(cpu);
+				asmp_engage_high(cpu);
 		pr_info(ASMP_TAG"disabled\n");
 	}
 	return ret;
