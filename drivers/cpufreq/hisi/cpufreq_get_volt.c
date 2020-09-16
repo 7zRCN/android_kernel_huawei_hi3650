@@ -53,7 +53,7 @@ extern u32 rdr_lpm3_buf_len;
 /*lint -e715 -e838*/
 noinline int atfd_hisi_service_get_val_smc(u64 function_id, u64 arg0, u64 arg1, u64 arg2)
 {
-	BUG_ON_BUILD(sizeof(int) != 8);
+	BUILD_BUG_ON(sizeof(int) != 8);
 
 	/* Huawei, do stuff the proper way already */
 	register u64 x0 asm("x0") = function_id;
