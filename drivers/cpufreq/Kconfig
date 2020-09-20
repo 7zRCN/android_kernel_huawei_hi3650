@@ -219,6 +219,14 @@ config CPU_FREQ_GOV_INTERACTIVE
 
 	  If in doubt, say N.
 
+config CPU_FREQ_GOV_BLU_ACTIVE
+	bool "'blu_active' cpufreq policy governor"
+	help
+	  Blu_active governor.
+	  If in doubt, say N.
+
+
+
 config CPU_FREQ_GOV_CONSERVATIVE
 	tristate "'conservative' cpufreq governor"
 	depends on CPU_FREQ
